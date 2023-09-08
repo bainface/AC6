@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Weapon Comparison</title>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Weapon Comparison</h1>
+    <p>Select up to 3 weapons to compare:</p>
+    <select id="weaponSelect1"></select>
+    <select id="weaponSelect2"></select>
+    <select id="weaponSelect3"></select>
+    <button onclick="updateGraphs()">Compare</button>
+    
+    <h2>1-Hit Damage</h2>
+    <canvas id="oneHitDamageChart" width="400" height="200"></canvas>
+    
+    <h2>DPS</h2>
+    <canvas id="dpsChart" width="400" height="200"></canvas>
+    
+    <h2>Damage Over Time (1-5 seconds)</h2>
+    <canvas id="damageOverTimeChart" width="400" height="200"></canvas>
+    
+    <script>
+        let weaponData = [];
+
+        // Load weapon data from CSV
+        Papa.parse('weapon_data.csv', {
+            download: true,
+            header: true,
+            complete: function(results) {
+                weaponData = results.data;
+                populateWeaponSelects();
+            }
+        });
+
+        function populateWeaponSelects() {
+            const selects = [document.getElementById('weaponSelect1'), document.getElementById('weaponSelect2'), document.getElementById('weaponSelect3')];
+            selects.forEach(select => {
+                weaponData.forEach((weapon, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.text = weapon['名称'];
+                    select.add(option);
+                });
+            });
+        }
+
+        function updateGraphs() {
+            // Get selected weapons
+            const selectedWeapons = [
+                weaponData[document.getElementById('weaponSelect1').value],
+                weaponData[document.getElementById('weaponSelect2').value],
+                weaponData[document.getElementById('weaponSelect3').value]
+            ];
+
+            // Calculate 1-hit damage, DPS, and damage over time (1-5 seconds)
+            const oneHitDamages = selectedWeapons.map(weapon => parseFloat(weapon['攻撃力']));
+            const dpsValues = selectedWeapons.map(weapon => parseFloat(weapon['攻撃力']) * parseFloat(weapon['連射性能']));
+            
+            // Calculate damage over time (1-5 seconds) considering reload and cooldown
+            // This is a simplified version and may not cover all edge cases
+            const damageOverTime = selectedWeapons.map(weapon => {
+                const attackPower = parseFloat(weapon['攻撃力']);
+                const firingRate = parseFloat(weapon['連射性能']);
+                const magazineSize = parseFloat(weapon['マガジン弾数']);
+                const reloadTime = parseFloat(weapon['リロード時間']);
+                let accumulatedDamage = 0;
+                let currentTime = 0;
+                while (currentTime <= 5) {
+                    if (magazineSize > 0) {
+                        accumulatedDamage += attackPower;
+                        currentTime += 1 / firingRate;
+                    } else {
+                        currentTime += reloadTime;
+                    }
+                }
+                return accumulatedDamage;
+            });
+
+            // Plot the graphs using Chart.js
+            new Chart(document.getElementById('oneHitDamageChart'), {
+                type: 'bar',
+                data: {
+                    labels: selectedWeapons.map(weapon => weapon['名称']),
+                    datasets: [{
+                        label: '1-Hit Damage',
+                        data: oneHitDamages
+                    }]
+                }
+            });
+
+            new Chart(document.getElementById('dpsChart'), {
+                type: 'bar',
+                data: {
+                    labels: selectedWeapons.map(weapon => weapon['名称']),
+                    datasets: [{
+                        label: 'DPS',
+                        data: dpsValues
+                    }]
+                }
+            });
+
+            new Chart(document.getElementById('damageOverTimeChart'), {
+                type: 'bar',
+                data: {
+                    labels: selectedWeapons.map(weapon => weapon['名称']),
+                    datasets: [{
+                        label: 'Damage Over Time (1-5s)',
+                        data: damageOverTime
+                    }]
+                }
+            });
+
+            // Update graphs
+            // TODO: Implement graph plotting here
+        }
+    </script>
+</body>
+</html>
