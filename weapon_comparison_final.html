@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 <html lang="en">
-<head><style>canvas { max-width: 600px; }</style>
+<head><style>canvas { width: 480px; height: 600px; }</style>
     <meta charset="UTF-8">
     <title>Weapon Comparison</title>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
@@ -59,7 +59,12 @@
 
             // 1-Hit Damage and DPS
             const oneHitDamages = selectedWeapons.map(weapon => parseFloat(weapon['攻撃力']));
-            const dpsValues = selectedWeapons.map(weapon => parseFloat(weapon['攻撃力']) * parseFloat(weapon['連射性能']));
+            const dpsValues = selectedWeapons.map(weapon => {
+                const attackPower = parseFloat(weapon['攻撃力']);
+                const firingRate = parseFloat(weapon['連射性能']);
+                const reloadTime = parseFloat(weapon['リロード時間']);
+                return firingRate > 0 ? attackPower * firingRate : attackPower * (1 / reloadTime);
+            });
             
             // Calculate damage over time (1-5 seconds) considering reload and cooldown
             const damageOverTimeValues = selectedWeapons.map(weapon => {
@@ -97,6 +102,16 @@
                         label: '1-Hit Damage',
                         data: oneHitDamages
                     }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
                 }
             });
 
@@ -108,6 +123,16 @@
                         label: 'DPS',
                         data: dpsValues
                     }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
                 }
             });
 
@@ -126,6 +151,10 @@
                         x: {
                             type: 'category',
                             labels: ['1s', '2s', '3s', '4s', '5s']
+                        },
+                        y: {
+                            beginAtZero: true,
+                            type: 'linear'
                         }
                     }
                 }
