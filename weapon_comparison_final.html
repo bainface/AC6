@@ -57,12 +57,10 @@
                 weaponData[document.getElementById('weaponSelect3').value]
             ];
 
-            // Calculate 1-hit damage, DPS, and damage over time (1-5 seconds)
             const oneHitDamages = selectedWeapons.map(weapon => parseFloat(weapon['攻撃力']));
             const dpsValues = selectedWeapons.map(weapon => parseFloat(weapon['攻撃力']) * parseFloat(weapon['連射性能']));
             
             // Calculate damage over time (1-5 seconds) considering reload and cooldown
-            // This is a simplified version and may not cover all edge cases
             const damageOverTime = selectedWeapons.map(weapon => {
                 const attackPower = parseFloat(weapon['攻撃力']);
                 const firingRate = parseFloat(weapon['連射性能']);
@@ -83,40 +81,40 @@
 
             // Plot the graphs using Chart.js
             new Chart(document.getElementById('oneHitDamageChart'), {
-                type: 'bar',
+                type: 'line',
                 data: {
                     labels: selectedWeapons.map(weapon => weapon['名称']),
                     datasets: [{
                         label: '1-Hit Damage',
-                        data: oneHitDamages
+                        data: oneHitDamages,
+                        fill: false
                     }]
                 }
             });
 
             new Chart(document.getElementById('dpsChart'), {
-                type: 'bar',
+                type: 'line',
                 data: {
                     labels: selectedWeapons.map(weapon => weapon['名称']),
                     datasets: [{
                         label: 'DPS',
-                        data: dpsValues
+                        data: dpsValues,
+                        fill: false
                     }]
                 }
             });
 
             new Chart(document.getElementById('damageOverTimeChart'), {
-                type: 'bar',
+                type: 'line',
                 data: {
                     labels: selectedWeapons.map(weapon => weapon['名称']),
                     datasets: [{
                         label: 'Damage Over Time (1-5s)',
-                        data: damageOverTime
+                        data: damageOverTime,
+                        fill: false
                     }]
                 }
             });
-
-            // Update graphs
-            // TODO: Implement graph plotting here
         }
     </script>
 </body>
