@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><style>canvas { max-width: 600px; }</style>
     <meta charset="UTF-8">
     <title>Weapon Comparison</title>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
@@ -57,49 +57,56 @@
                 weaponData[document.getElementById('weaponSelect3').value]
             ];
 
+            // 1-Hit Damage and DPS
             const oneHitDamages = selectedWeapons.map(weapon => parseFloat(weapon['攻撃力']));
             const dpsValues = selectedWeapons.map(weapon => parseFloat(weapon['攻撃力']) * parseFloat(weapon['連射性能']));
             
             // Calculate damage over time (1-5 seconds) considering reload and cooldown
-            const damageOverTime = selectedWeapons.map(weapon => {
+            const damageOverTimeValues = selectedWeapons.map(weapon => {
                 const attackPower = parseFloat(weapon['攻撃力']);
                 const firingRate = parseFloat(weapon['連射性能']);
-                const magazineSize = parseFloat(weapon['マガジン弾数']);
+                let magazineSize = parseFloat(weapon['マガジン弾数']);
                 const reloadTime = parseFloat(weapon['リロード時間']);
-                let accumulatedDamage = 0;
+                let damages = [];
                 let currentTime = 0;
-                while (currentTime <= 5) {
-                    if (magazineSize > 0) {
-                        accumulatedDamage += attackPower;
-                        currentTime += 1 / firingRate;
-                    } else {
-                        currentTime += reloadTime;
+                let accumulatedDamage = 0;
+
+                for (let i = 1; i <= 5; i++) {
+                    while (currentTime < i) {
+                        if (magazineSize > 0) {
+                            accumulatedDamage += attackPower;
+                            currentTime += 1 / firingRate;
+                            magazineSize -= 1;
+                        } else {
+                            currentTime += reloadTime;
+                            magazineSize = parseFloat(weapon['マガジン弾数']);
+                        }
                     }
+                    damages.push(accumulatedDamage);
                 }
-                return accumulatedDamage;
+
+                return damages;
             });
 
             // Plot the graphs using Chart.js
             new Chart(document.getElementById('oneHitDamageChart'), {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: selectedWeapons.map(weapon => weapon['名称']),
                     datasets: [{
                         label: '1-Hit Damage',
-                        data: oneHitDamages,
-                        fill: false
+                        data: oneHitDamages
                     }]
                 }
             });
 
             new Chart(document.getElementById('dpsChart'), {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: selectedWeapons.map(weapon => weapon['名称']),
                     datasets: [{
                         label: 'DPS',
-                        data: dpsValues,
-                        fill: false
+                        data: dpsValues
                     }]
                 }
             });
@@ -107,12 +114,20 @@
             new Chart(document.getElementById('damageOverTimeChart'), {
                 type: 'line',
                 data: {
-                    labels: selectedWeapons.map(weapon => weapon['名称']),
-                    datasets: [{
-                        label: 'Damage Over Time (1-5s)',
-                        data: damageOverTime,
+                    labels: ['1s', '2s', '3s', '4s', '5s'],
+                    datasets: damageOverTimeValues.map((damages, index) => ({
+                        label: selectedWeapons[index]['名称'],
+                        data: damages,
                         fill: false
-                    }]
+                    }))
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'category',
+                            labels: ['1s', '2s', '3s', '4s', '5s']
+                        }
+                    }
                 }
             });
         }
